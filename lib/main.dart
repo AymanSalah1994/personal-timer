@@ -74,6 +74,9 @@ class TimerHomePage extends StatelessWidget {
                     },
                   ),
                 ),
+                Padding(
+                  padding: EdgeInsets.all(defaultPadding),
+                ),
               ],
             ),
             Expanded(
