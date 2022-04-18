@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'widgets.dart';
 import 'theme.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'timer.dart';
+import 'timer_model.dart';
+import 'setting.dart';
 
 void main() => runApp(MyApp());
 
@@ -18,13 +21,40 @@ class MyApp extends StatelessWidget {
 }
 
 class TimerHomePage extends StatelessWidget {
-  void emptymethod() {}
+  var myTimer = CountDownTimer();
+  void gotoSettings(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SettingScreen()),
+    );
+  }
+
   final double defaultPadding = 5.0;
-  const TimerHomePage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    List<PopupMenuItem<String>> menuItems = [];
+    // List menuItems = <PopupMenuItem<String>>[];
+    menuItems.add(
+      PopupMenuItem<String>(
+        value: 'Settings',
+        child: Text('Settings'),
+      ),
+    );
+    myTimer.startwork();
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (String result) {
+              if (result == 'Settings') {
+                gotoSettings(context);
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return menuItems;
+            },
+          ),
+        ],
         title: const Text('My Work Timer'),
       ),
       body: LayoutBuilder(builder: (context, constraints) {
@@ -40,11 +70,11 @@ class TimerHomePage extends StatelessWidget {
                 ),
                 Expanded(
                   child: ProductivityButton(
-                    text: 'Start',
+                    text: 'Work',
                     widthSize: 100.0,
                     color: Color(0xff009688),
                     onPressed: () {
-                      emptymethod();
+                      myTimer.startwork();
                     },
                   ),
                 ),
@@ -53,11 +83,11 @@ class TimerHomePage extends StatelessWidget {
                 ),
                 Expanded(
                   child: ProductivityButton(
-                    text: 'Stop',
+                    text: 'Short Break',
                     widthSize: 100.0,
                     color: Color(0xff607D8B),
                     onPressed: () {
-                      emptymethod();
+                      myTimer.startBreak(true);
                     },
                   ),
                 ),
@@ -66,11 +96,11 @@ class TimerHomePage extends StatelessWidget {
                 ),
                 Expanded(
                   child: ProductivityButton(
-                    text: 'Stop',
+                    text: 'Long Break',
                     widthSize: 100.0,
                     color: Color(0xff455A64),
                     onPressed: () {
-                      emptymethod();
+                      myTimer.startBreak(false);
                     },
                   ),
                 ),
@@ -80,18 +110,34 @@ class TimerHomePage extends StatelessWidget {
               ],
             ),
             Expanded(
-              child: CircularPercentIndicator(
-                radius: width / 3,
-                lineWidth: 10.0,
-                percent: 1,
-                progressColor: Color(0xff009688),
-                center: Text(
-                  '50%',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              child: StreamBuilder<TimerModel>(
+                stream: myTimer.stream(),
+                initialData: TimerModel(percent: 0, time: '00:00'),
+                builder: (context, snapshot) {
+                  var myTimermodel = TimerModel();
+                  myTimermodel = (snapshot.data!.time == '00:00')
+                      ? TimerModel(percent: 1, time: '00:00')
+                      : snapshot.data!;
+                  if (snapshot.hasData) {
+                    return CircularPercentIndicator(
+                      animateFromLastPercent: true,
+                      radius: width / 2.5,
+                      lineWidth: 5.0,
+                      animation: true,
+                      percent: myTimermodel.percent!,
+                      center: Text(
+                        myTimermodel.time!,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20.0,
+                        ),
+                      ),
+                      progressColor: Colors.red,
+                    );
+                  } else {
+                    return CircularProgressIndicator();
+                  }
+                },
               ),
             ),
             Row(
@@ -101,11 +147,11 @@ class TimerHomePage extends StatelessWidget {
                 ),
                 Expanded(
                   child: ProductivityButton(
-                    text: 'Start',
+                    text: 'Stop',
                     widthSize: 100.0,
                     color: Color(0xff212121),
                     onPressed: () {
-                      emptymethod();
+                      myTimer.stopTimer();
                     },
                   ),
                 ),
@@ -118,7 +164,7 @@ class TimerHomePage extends StatelessWidget {
                     widthSize: 100.0,
                     color: Color(0xff009688),
                     onPressed: () {
-                      emptymethod();
+                      myTimer.startTimer();
                     },
                   ),
                 ),
